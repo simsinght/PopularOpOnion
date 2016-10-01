@@ -27,12 +27,15 @@ if toronto:
 longstring = ''''''
 
 search = trend_array[0]
-search = search[1:]
 
 var = raw_input("Enter the hashtag you would like to use: ")
 
 if (var != ""):
    search = var
+
+if (search[0] == '#'):
+   search = search[1:]
+
 
 print search 
 
@@ -40,14 +43,19 @@ avgTweetLength = 0
 
 print "searching for tweets"
 #goes through results and print out the actual tweet
-results = twitter.search(q=search, count=1000)
+results = twitter.search(q=search, count=500)
 
 counter = 0
+
 print "sorting the statuses"
 for result in results['statuses']:
    longstring += result['text']
    avgTweetLength += len(result['text'])
    counter += 1
+
+if (counter == 0):
+   print "No tweets were found"
+   exit()
 
 print avgTweetLength
 avgTweetLength = avgTweetLength / counter
