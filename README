@@ -1,3 +1,5 @@
+Compile program with: python -W ignore oauthtest1.py
+
 so begins.
 
 attempt using [Markovify](http://github.com/jsvine/markovify)
