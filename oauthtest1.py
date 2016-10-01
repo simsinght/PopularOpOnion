@@ -14,6 +14,27 @@ OAUTH_TOKEN_SECRET = "VOD7LLtb1AoNQBPL4DT7ihLf7EfYQ7YIishBiWFMK6MQN"
 
 #twitter = Twython(APP_KEY, access_token=ACCESS_TOKEN)
 
+
+counter = 0
+longstring = ''''''
+avgTweetLength = 0
+
+
+def createTweetString(results):
+   global counter, longstring, avgTweetLength
+   print "sorting the statuses"
+   for result in results['statuses']:
+      longstring += result['text']
+      avgTweetLength += len(result['text'])
+      counter += 1
+      print len(longstring)
+   if (counter == 0):
+      print "No tweets were found"
+      exit()
+      
+
+   
+
 twitter = Twython(APP_KEY, APP_SECRET,
                   OAUTH_TOKEN, OAUTH_TOKEN_SECRET)
 
@@ -24,7 +45,6 @@ if toronto:
       trend_array.append(trend['name'])
 
 #print trend_array
-longstring = ''''''
 
 search = trend_array[0]
 
@@ -39,27 +59,16 @@ if (search[0] == '#'):
 
 print search 
 
-avgTweetLength = 0
 
 print "searching for tweets"
 #goes through results and print out the actual tweet
-results = twitter.search(q=search, count=500)
+results = twitter.search(q=search, count=100)
 
-counter = 0
-
-print "sorting the statuses"
-for result in results['statuses']:
-   longstring += result['text']
-   avgTweetLength += len(result['text'])
-   counter += 1
-
-if (counter == 0):
-   print "No tweets were found"
-   exit()
+createTweetString(results)
 
 print avgTweetLength
-avgTweetLength = avgTweetLength / counter
-print avgTweetLength                         
+postLength = avgTweetLength / counter
+print postLength 
     
 text_model = markovify.Text(longstring)
 
@@ -67,11 +76,17 @@ update = "None"
 
 print "entering while loop"
 while(counter != 0):
-   update = text_model.make_short_sentence(avgTweetLength)
+   update = text_model.make_short_sentence(postLength)
    counter -= 1
    print counter,
-   if (update != "None"):
-      print "not none"
+   if (update == None):
+      #add more tweets to the long string
+      moreResults = twitter.search(q=search, max_id=results['statuses'][-1]['id_str'])
+      createTweetString(moreResults)
+      print "got none",
+      continue
+   else:
+      print "breaking"
       break
 
    
