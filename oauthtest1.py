@@ -22,16 +22,13 @@ avgTweetLength = 0
 
 def createTweetString(results):
    global counter, longstring, avgTweetLength
-   print "sorting the statuses"
    for result in results['statuses']:
       longstring += result['text']
       avgTweetLength += len(result['text'])
       counter += 1
-      print len(longstring)
    if (counter == 0):
       print "No tweets were found"
       exit()
-      
 
    
 
@@ -69,21 +66,23 @@ createTweetString(results)
 print avgTweetLength
 postLength = avgTweetLength / counter
 print postLength 
-    
-text_model = markovify.Text(longstring)
 
 update = "None"
 
 print "entering while loop"
 while(counter != 0):
+   text_model = markovify.Text(longstring)
    update = text_model.make_short_sentence(postLength)
    counter -= 1
    print counter,
    if (update == None):
+      print postLength
+      #raw_input("Press Enter to continue")
       #add more tweets to the long string
-      moreResults = twitter.search(q=search, max_id=results['statuses'][-1]['id_str'])
-      createTweetString(moreResults)
-      print "got none",
+      results = twitter.search(q=search, max_id=results['statuses'][-1]['id_str'])
+      
+      createTweetString(results)
+      print "got none"
       continue
    else:
       print "breaking"
