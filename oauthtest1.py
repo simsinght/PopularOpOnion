@@ -1,4 +1,5 @@
 from twython import Twython
+import markovify
 import os
 
 # Set these values
@@ -14,8 +15,11 @@ twitter = Twython(APP_KEY, access_token=ACCESS_TOKEN)
 longstring = ''''''
 
 #goes through results and print out the actual tweet
-results = twitter.search(q='AltRightStarWars', count=20)
+results = twitter.search(q='AltRightStarWars', count=300)
 for result in results['statuses']:
     longstring += result['text']
     
-print longstring
+text_model = markovify.Text(longstring)
+
+for i in range(1, 10):
+    print text_model.make_short_sentence(140)
