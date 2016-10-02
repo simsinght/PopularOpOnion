@@ -1,3 +1,5 @@
+#!/usr/bin/env python -W ignore
+
 from twython import Twython
 import markovify
 import os
@@ -5,8 +7,9 @@ import os
 # Set these values
 APP_KEY = os.environ['CONSUMER_KEY'] 
 APP_SECRET = os.environ['CONSUMER_SECRET']
-OAUTH_TOKEN = "782061749801320448-mCvd8o35dEZ2rcRmx7EOKbUS1fRMItg"
-OAUTH_TOKEN_SECRET = "VOD7LLtb1AoNQBPL4DT7ihLf7EfYQ7YIishBiWFMK6MQN"
+OAUTH_TOKEN = os.environ['ACCESS_TOKEN']
+OAUTH_TOKEN_SECRET = os.environ['ACCESS_TOKEN_SECRET']
+
 
 #twitter = Twython(APP_KEY, APP_SECRET, oauth_version=2)
 #ACCESS_TOKEN = twitter.obtain_access_token()
@@ -23,7 +26,21 @@ avgTweetLength = 0
 def createTweetString(results):
    global counter, longstring, avgTweetLength
    for result in results['statuses']:
-      longstring += result['text']
+      text = result['text']
+      if "RT" in text:
+         text = text.replace("RT", "", 1)
+         
+      
+      if "https://t.c" in text:
+         indexOfHTTPS = text.index("https://t.c")
+         begIndex = indexOfHTTPS
+         while(indexOfHTTPS < len(text) and (text[indexOfHTTPS] != ' ' or text[indexOfHTTPS] != '\n')):
+               indexOfHTTPS += 1
+               
+         text = text[:begIndex] + text[indexOfHTTPS:]
+         
+
+      longstring += text
       avgTweetLength += len(result['text'])
       counter += 1
    if (counter == 0):
@@ -102,8 +119,13 @@ for i in range(0,15):
 
    #Otherwise break out
    else:
-      print "Created a Tweet"
-      break
+      print "Created a Tweet:",
+      print update
+      print "Press enter to continue and tweet."
+      if (raw_input("Would you like to try again? Type \"Yes\":") != ""):
+         continue
+      else:
+         break
 
 if(update == None):
    print "Unable to generate tweet -- try again"
