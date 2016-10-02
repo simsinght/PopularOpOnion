@@ -19,30 +19,57 @@ OAUTH_TOKEN_SECRET = os.environ['ACCESS_TOKEN_SECRET']
 counter = 0
 longstring = ''''''
 avgTweetLength = 0
-
+postLength = 140
+user = False
+maxid = 0
 
 #Function used to read in tweets and adds them to a string used
 #later to develop model
 def createTweetString(results):
    global counter, longstring, avgTweetLength
-   for result in results['statuses']:
-      text = result['text']
-      if "RT" in text:
-         text = text.replace("RT", "", 1)
+   if (user):   
+      for result in results:
+         text = result['text']
+         if "RT" in text:
+            text = text.replace("RT", "", 1)
+            
          
-      
-      if "https://t.c" in text:
-         indexOfHTTPS = text.index("https://t.c")
-         begIndex = indexOfHTTPS
-         while(indexOfHTTPS < len(text) and (text[indexOfHTTPS] != ' ' or text[indexOfHTTPS] != '\n')):
-               indexOfHTTPS += 1
-               
-         text = text[:begIndex] + text[indexOfHTTPS:]
-         
+         if "https://t.c" in text:
+            indexOfHTTPS = text.index("https://t.c")
+            begIndex = indexOfHTTPS
+            while(indexOfHTTPS < len(text) and (text[indexOfHTTPS] != ' ' or text[indexOfHTTPS] != '\n')):
+                  indexOfHTTPS += 1
+                  
+            text = text[:begIndex] + text[indexOfHTTPS:]
+            
 
-      longstring += text
-      avgTweetLength += len(result['text'])
-      counter += 1
+         longstring += text
+         avgTweetLength += len(result['text'])
+         counter += 1
+   else:
+            
+      for result in results['statuses']:
+         text = result['text']
+         if "RT" in text:
+            text = text.replace("RT", "", 1)
+            
+         
+         if "https://t.c" in text:
+            indexOfHTTPS = text.index("https://t.c")
+            begIndex = indexOfHTTPS
+            while(indexOfHTTPS < len(text) and (text[indexOfHTTPS] != ' ' or text[indexOfHTTPS] != '\n')):
+                  indexOfHTTPS += 1
+                  
+            text = text[:begIndex] + text[indexOfHTTPS:]
+            
+
+         longstring += text
+         avgTweetLength += len(result['text'])
+         counter += 1
+
+   #Calculate the average tweet length
+   postLength = avgTweetLength / counter
+   
    if (counter == 0):
       print "No tweets were found"
       exit()
@@ -51,6 +78,23 @@ def createTweetString(results):
 #Access twitter
 twitter = Twython(APP_KEY, APP_SECRET,
                   OAUTH_TOKEN, OAUTH_TOKEN_SECRET)
+
+def fetchTweets(search):
+   global user
+   if (user and maxid != 0):
+      return twitter.get_user_timeline(screen_name=search[1:], count=200, max_id=maxid)
+   elif (search[0] == '@'):
+      print "it's a fucking user"
+      user = True
+      return twitter.get_user_timeline(screen_name=search[1:], count=200)
+   elif(maxid != 0):
+      return twitter.search(q=search, max_id=maxid)
+   else:
+      user = False
+      #goes through results and print out the actual tweet
+      return twitter.search(q=search, count=100)
+
+   
 
 #Get the place (right now default is SF)
 #and get an array of trending hashtags from that
@@ -79,25 +123,23 @@ if (var != ""):
 if (search[0] == '#'):
    search = search[1:]
 
+
 #Output search
 print "Searching for hashtag ",
 print search 
 
 
 print "Fetching Tweets"
-
-#goes through results and print out the actual tweet
-results = twitter.search(q=search, count=100)
-
+results = fetchTweets(search)
+print "gon' create that long string"
 #Create the string of all the fetched tweets
 createTweetString(results)
 
-#Calculate the average tweet length
-postLength = avgTweetLength / counter
 
 #Variable to test if tweet has been generated
 update = "None"
-
+print "we gon b alright"
+print type(longstring)
 #Loop until tweet is generated
 for i in range(0,15): 
    #Generate a markovift model of the string
@@ -110,9 +152,11 @@ for i in range(0,15):
    #again
    if (update == None):
       #add more tweets to the long string
-      results = twitter.search(q=search, max_id=results['statuses'][-1]['id_str'])
-     
+      #results = twitter.search(q=search, max_id=results['statuses'][-1]['id_str'])
+      maxid = results[-1]['id_str']
+      results = fetchTweets(search)
       #Recreate the string of tweets
+      
       createTweetString(results)
       print "Reading in more tweets"
       continue
@@ -123,6 +167,12 @@ for i in range(0,15):
       print update
       print "Press enter to continue and tweet."
       if (raw_input("Would you like to try again? Type \"Yes\":") != ""):
+         #add more tweets to the long string
+         maxid = results['statuses'][-1]['id_str']
+         results = fetchTweets(search)
+         #Recreate the string of tweets
+         createTweetString(results)
+         print len(longstring)
          continue
       else:
          break
