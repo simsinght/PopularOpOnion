@@ -168,7 +168,10 @@ for i in range(0,15):
       print "Press enter to continue and tweet."
       if (raw_input("Would you like to try again? Type \"Yes\":") != ""):
          #add more tweets to the long string
-         maxid = results['statuses'][-1]['id_str']
+         if (user):
+            maxid = results[-1]['id_str']
+         else:
+            maxid = results['statuses'][-1]['id_str']
          results = fetchTweets(search)
          #Recreate the string of tweets
          createTweetString(results)
